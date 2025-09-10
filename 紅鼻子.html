@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>紅鼻子</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background: url('https://i.meee.com.tw/Pn9QoNq.png') no-repeat center center;
+      background-size: cover;
+    }
+
+    #tip {
+      position: absolute;
+      top: 50%;
+      right: 30px; 
+      transform: translateY(-50%);
+      font-size: 2rem;
+      color: white;
+      text-shadow: 1px 1px 4px black;
+      z-index: 20;
+      display: none;
+      writing-mode: vertical-rl; 
+      text-orientation: upright; 
+    }
+
+    #drawButton {
+      position: absolute;
+      top: 50%;   
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 120px;
+      height: 120px;
+      background: red;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      z-index: 10;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+    #drawButton:hover {
+      background: darkred;
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    #resultImage {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      z-index: 5;
+      transition: opacity 0.5s ease;
+    }
+    #resultImage.show {
+      opacity: 1;
+    }
+
+    #fireworksCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9; 
+    }
+  </style>
+</head>
+<body>
+  <div id="tip">點螢幕任意地方回首頁</div>
+  <button id="drawButton"></button>
+  <img id="resultImage" src="" alt="結果圖">
+  <canvas id="fireworksCanvas"></canvas>
+
+  <script>
+    const images = [
+      "https://i.meee.com.tw/dt1U8Is.png",
+      "https://i.meee.com.tw/w7Rzbww.png",
+      "https://i.meee.com.tw/WOmw3cy.png",
+      "https://i.meee.com.tw/0O9gcE4.png",
+      "https://i.meee.com.tw/Ri86b7h.jpg",
+      "https://i.meee.com.tw/XzhcBjV.jpeg",
+      "https://i.meee.com.tw/n5AC0LE.jpeg",
+      "https://i.meee.com.tw/MNudpkT.png"
+    ];
+
+    // 預先載入圖片
+    images.forEach(src => new Image().src = src);
+
+    const drawButton = document.getElementById("drawButton");
+    const result = document.getElementById("resultImage");
+    const tip = document.getElementById("tip");
+    let drawn = false;
+
+    const canvas = document.getElementById("fireworksCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let fireworks = [];
+
+    class Firework {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.particles = [];
+        for (let i = 0; i < 200; i++) {
+          this.particles.push({
+            x: this.x,
+            y: this.y,
+            speed: Math.random() * 8 + 4,
+            angle: Math.random() * 2 * Math.PI,
+            alpha: 1,
+            radius: Math.random() * 3 + 3 
+          });
+        }
+      }
+
+      update() {
+        this.particles.forEach(p => {
+          p.x += Math.cos(p.angle) * p.speed;
+          p.y += Math.sin(p.angle) * p.speed + 0.1;
+          p.alpha -= 0.02;
+        });
+        this.particles = this.particles.filter(p => p.alpha > 0);
+      }
+
+      draw() {
+        this.particles.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, 2 * Math.PI);
+          ctx.fillStyle = `rgba(255,255,255,${p.alpha})`;
+          ctx.fill();
+        });
+      }
+
+      done() {
+        return this.particles.length === 0;
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      fireworks.forEach(fw => {
+        fw.update();
+        fw.draw();
+      });
+      fireworks = fireworks.filter(fw => !fw.done());
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    drawButton.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (drawn) return;
+      drawn = true;
+
+      const randomIndex = Math.floor(Math.random() * images.length);
+      result.src = images[randomIndex];
+      result.classList.add("show");
+
+      drawButton.style.display = "none";
+      tip.style.display = "block";
+
+      for (let i = 0; i < 15; i++) {
+        fireworks.push(new Firework(
+          Math.random() * canvas.width,
+          Math.random() * canvas.height / 2
+        ));
+      }
+    });
+
+    document.body.addEventListener("click", () => {
+      if (!drawn) return;
+      result.classList.remove("show");
+      drawButton.style.display = "block";
+      tip.style.display = "none"; 
+      drawn = false;
+    });
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+  </script>
+</body>
+</html>
