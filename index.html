@@ -108,7 +108,6 @@
       "https://i.meee.com.tw/ljTRkJd.jpg"
     ];
 
-    // 預先載入圖片
     images.forEach(src => new Image().src = src);
 
     const drawButton = document.getElementById("drawButton");
@@ -195,8 +194,9 @@
       }
     });
 
-    document.body.addEventListener("click", () => {
+    window.addEventListener("click", (e) => {
       if (!drawn) return;
+      if (e.target.id === "drawButton") return;
       result.classList.remove("show");
       drawButton.style.display = "block";
       tip.style.display = "none"; 
